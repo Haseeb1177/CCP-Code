@@ -1,0 +1,151 @@
+//Implementation of cancelReservation in GuestHouse:
+import java.util.Map;
+
+public class GuestHouse {
+    private String name;
+    private Map<Integer, Reservation> reservations; // Map of reservationNumber to Reservation
+
+    /**
+     * Cancels the specified reservation by removing it from the guest house's reservations,
+     * removing it from the reserverPayer's reservations, and deallocating the room.
+     *
+     * @param reservationNumber the number of the reservation to cancel
+     * @return feedback text about the cancelled reservation
+     */
+    public String cancelReservation(int reservationNumber) {
+        // Defensive check: ensure the reservation number is positive
+        if (reservationNumber <= 0) {
+            return "Invalid reservation number.";
+        }
+
+        // Retrieve the reservation
+        Reservation reservation = reservations.get(reservationNumber);
+
+        // Defensive check: ensure the reservation exists
+        if (reservation == null) {
+            return "Reservation not found.";
+        }
+
+        // Get the ReserverPayer and Room associated with this reservation
+        ReserverPayer reserver = reservation.getReserverPayer();
+        Room room = reservation.getRoom();
+
+        // Defensive check: ensure reserver and room are not null
+        if (reserver == null || room == null) {
+            return "Reservation data is incomplete. Cannot cancel.";
+        }
+
+        // Step 1: Remove reservation from ReserverPayer
+        reserver.removeReservation(reservationNumber);
+
+        // Step 2: Deallocate room
+        room.deallocateRoom(reservation);
+
+        // Step 3: Remove from GuestHouse's reservation list
+        reservations.remove(reservationNumber);
+
+        return "Reservation #" + reservationNumber + " has been successfully cancelled.";
+    }
+}
+
+
+// Additional Support Classes (Simplified Stubs for Context):
+
+public class ReserverPayer {
+    private Map<Integer, Reservation> myReservations;
+
+    public void removeReservation(int reservationNumber) {
+        if (reservationNumber > 0 && myReservations.containsKey(reservationNumber)) {
+            myReservations.remove(reservationNumber);
+        }
+    }
+}
+
+public class Room {
+    private List<Reservation> roomReservations;
+
+    public void deallocateRoom(Reservation reservation) {
+        if (reservation != null && roomReservations.contains(reservation)) {
+            roomReservations.remove(reservation);
+        }
+    }
+}
+
+public class Reservation {
+    private int number;
+    private ReserverPayer reserverPayer;
+    private Room room;
+
+    public int getNumber() {
+        return number;
+    }
+
+    public ReserverPayer getReserverPayer() {
+        return reserverPayer;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+}
+
+Q2:
+
+// Refactored Code:
+private void confirmReservationButtonActionPerformed(java.awt.event.ActionEvent evt) {
+    if (!areDatesValid()) return;
+    if (!isNameValid()) return;
+    if (!isAddressValid()) return;
+    if (!isCreditCardValid()) return;
+
+    String reservationMessage = GuestHouseChainFacade.makeReservation(
+        guestHouseName, startDate, endDate, roomType, reserverName, multiLineAddress, creditCardNo);
+
+    reservationFeedbackField.setText(reservationMessage);
+
+    if (reservationMessage.startsWith("Confirmed")) {
+        setEnabledMakeReservationPanel(false);
+    }
+}
+
+private boolean areDatesValid() {
+    if (startDate == null || endDate == null) {
+        reservationFeedbackField.setText("Enter valid dates");
+        return false;
+    }
+    return true;
+}
+
+private boolean isNameValid() {
+    if (reserverName == null || reserverName.trim().isEmpty()) {
+        reservationFeedbackField.setText("Enter valid name");
+        customerNameField.requestFocus();
+        return false;
+    }
+    return true;
+}
+
+private boolean isAddressValid() {
+    if (address == null || address.trim().isEmpty()) {
+        reservationFeedbackField.setText("Enter valid address");
+        customerAddressTextArea.requestFocus();
+        return false;
+    }
+    return true;
+}
+
+private boolean isCreditCardValid() {
+    if (existingAddresses == null && 
+        !GuestHouseFacade.isValidCreditCardNumberFormat(creditCardNo)) {
+        reservationFeedbackField.setText(
+            GuestHouseFacade.creditCardNumberFormatError(creditCardNo));
+        creditCardNumberField.selectAll();
+        creditCardNumberField.requestFocus();
+        return false;
+    }
+    return true;
+}
+
+
+
+
